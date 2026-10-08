@@ -1,0 +1,80 @@
+-- Create Database
+CREATE DATABASE IF NOT EXISTS BankDB;
+USE BankDB;
+
+-- 1. Branches Table
+CREATE TABLE branches (
+    branch_id INT AUTO_INCREMENT PRIMARY KEY,
+    branch_name VARCHAR(100) NOT NULL,
+    city VARCHAR(50) NOT NULL,
+    routing_number VARCHAR(9) UNIQUE NOT NULL
+);
+
+-- 2. Customers Table
+CREATE TABLE customers (
+    customer_id INT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    phone VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3. Accounts Table
+CREATE TABLE accounts (
+    account_id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    branch_id INT NOT NULL,
+    account_type ENUM('Checking', 'Savings', 'Money Market') NOT NULL,
+    balance DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+    status ENUM('Active', 'Closed', 'Frozen') DEFAULT 'Active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE,
+    FOREIGN KEY (branch_id) REFERENCES branches(branch_id)
+);
+
+-- 4. Transactions Table
+CREATE TABLE transactions (
+    transaction_id INT AUTO_INCREMENT PRIMARY KEY,
+    account_id INT NOT NULL,
+    transaction_type ENUM('Deposit', 'Withdrawal', 'Transfer') NOT NULL,
+    amount DECIMAL(15, 2) NOT NULL,
+    transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (account_id) REFERENCES accounts(account_id)
+);
+
+-- 5. Loans Table
+CREATE TABLE loans (
+    loan_id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    branch_id INT NOT NULL,
+    loan_type ENUM('Home', 'Auto', 'Personal') NOT NULL,
+    amount DECIMAL(15, 2) NOT NULL,
+    interest_rate DECIMAL(4, 2) NOT NULL,
+    status ENUM('Approved', 'Pending', 'Paid Off') DEFAULT 'Pending',
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE,
+    FOREIGN KEY (branch_id) REFERENCES branches(branch_id)
+);
+
+-- Insert Sample Data
+INSERT INTO branches (branch_name, city, routing_number) VALUES
+('Downtown Main', 'New York', '123456789'),
+('Uptown Branch', 'New York', '987654321');
+
+INSERT INTO customers (first_name, last_name, email, phone) VALUES
+('Alice', 'Smith', 'alice@example.com', '555-0101'),
+('Bob', 'Johnson', 'bob@example.com', '555-0102');
+
+INSERT INTO accounts (customer_id, branch_id, account_type, balance) VALUES
+(1, 1, 'Checking', 2500.00),
+(1, 1, 'Savings', 10000.00),
+(2, 2, 'Checking', 450.50);
+
+INSERT INTO transactions (account_id, transaction_type, amount) VALUES
+(1, 'Deposit', 500.00),
+(1, 'Withdrawal', 100.00),
+(3, 'Deposit', 200.00);
+
+INSERT INTO loans (customer_id, branch_id, loan_type, amount, interest_rate, status) VALUES
+(1, 1, 'Auto', 15000.00, 4.50, 'Approved'),
+(2, 2, 'Personal', 5000.00, 7.20, 'Pending');
